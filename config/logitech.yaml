@@ -1,0 +1,12 @@
+# Define the linear axis
+axis_linear_y: 0
+axis_linear_z: 1
+scale_linear: 0.7
+scale_linear_turbo: 1.5
+
+axis_angular_roll: 3 #Roll
+axis_angular_pitch: 4 #Pitch
+scale_angular: 0.4
+
+enable_button: 4  # L1 shoulder button
+enable_turbo_button: 5  # L2 shoulder button

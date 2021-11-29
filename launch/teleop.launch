@@ -1,0 +1,13 @@
+<launch>
+    <arg name="config" default="$(find armer_teleop)/config/logitech.yaml"/>
+
+    <node respawn="true" pkg="joy" type="joy_node" name="armer_joy_node" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+        <param name="autorepeat_rate" value="100"/>
+    </node>
+
+    <node pkg="armer_teleop" type="armer_teleop" name="armer_teleop" output="screen">
+        <param name="config" value="$(arg config)" />
+    </node>
+</launch>
