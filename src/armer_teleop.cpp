@@ -6,6 +6,17 @@
 #include <std_srvs/Empty.h>
 
 /**
+ * @brief STATE enumeration
+ * 
+ */
+typedef enum 
+{
+    IDLE = 0,
+    ENABLED = 1,
+    HOMING = 2
+} TELEOP_STATES;
+
+/**
  * @brief Definition of the ArmerTeleop class TODO: move to its own header
  * 
  */
@@ -29,6 +40,7 @@ private:
     //Other Variables
     std::string frame_id_;
     int button_state_;
+    TELEOP_STATES teleop_state_;
 
     //ROS Specific
     ros::Publisher vel_pub_;
@@ -65,7 +77,7 @@ ArmerTeleop::ArmerTeleop():
     nh_.getParam("/armer_teleop/frame_id", frame_id_);
 
     // Defined internal states for telop: [0: idle, 1: enabled; 2: homed; 3: transition]
-    button_state_ = 0;
+    teleop_state_ = IDLE;
 
     // ------- Debugging Outputs
     ROS_INFO_STREAM("linear scale: " << l_scale_ << " and angular scale: " << a_scale_);
@@ -97,39 +109,25 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     twist_s.header.frame_id = frame_id_;
     twist_s.twist = twist;
 
-    if (joy->buttons[deadman_btn_])
+    if (joy->buttons[deadman_btn_] && teleop_state_ != HOMING)
     {
-        if (button_state_ == 2)
-        {
-            ROS_INFO_STREAM("SENDING EMPTY TWIST");
-            //Previously homed so send clean twist 
-            geometry_msgs::Twist empty_twist;
-            empty_twist.linear.z = 0;
-            empty_twist.linear.y = 0;
-            empty_twist.angular.z = 0;
-            empty_twist.angular.y = 0;
-            twist_s.twist = empty_twist;
-
-            //Update to idle state
-            button_state_ = 0;
-        }
-
         //Trigger publish only if DEADMAN is pressed
         vel_pub_.publish(twist_s);
 
         //Update telop state
-        button_state_ = 1;
+        teleop_state_ = ENABLED;
     }
     else if ( joy->buttons[home_btn_] )
     {
-        ROS_INFO_STREAM("HOME CALLED....");
+        //Set state to HOMING
+        teleop_state_ = HOMING; 
+
         //Send robot arm to home position (defined by Armer)
         std_srvs::Empty srv;
         home_srv_.call(srv);
-        ROS_INFO_STREAM("HOME FINISHED....");
 
-        //Set state to HOMED
-        button_state_ = 2;
+        //Set state to IDLE
+        teleop_state_ = IDLE; 
     }
 
 }
