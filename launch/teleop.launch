@@ -1,19 +1,18 @@
 <launch>
-    <group ns="armer_teleop">
-        <!-- Load the logitech yaml file by default -->
-        <rosparam file="$(find armer_teleop)/config/logitech.yaml"/>
+    <!-- Load in armer_teleop param (configurable ) -->
+    <arg name="frame_id" default="tool0" doc="This is the frame id given to the particular EE frame of a given robot" />
+    <arg name="abb_model" default="6700" doc="The robot model being used - default is the IRB6700-200/2.6" />
+    
+    <!-- Load the logitech yaml file by default -->
+    <rosparam file="$(find armer_teleop)/config/logitech.yaml"/>
 
-        <!-- Load in armer_teleop param (configurable ) -->
-        <arg name="frame_id" default="tool0" doc="This is the frame id given to the particular EE frame of a given robot" />
+    <node respawn="true" pkg="joy" type="joy_node" name="armer_joy_node" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+        <param name="autorepeat_rate" value="100"/>
+    </node>
 
-        <node respawn="true" pkg="joy" type="joy_node" name="armer_joy_node" >
-            <param name="dev" type="string" value="/dev/input/js0" />
-            <param name="deadzone" value="0.12" />
-            <param name="autorepeat_rate" value="100"/>
-        </node>
-
-        <node pkg="armer_teleop" type="armer_teleop" name="armer_teleop" output="screen">
-            <param name="frame_id" value="$(arg frame_id)" />
-        </node>
-    </group>
+    <node pkg="armer_teleop" type="armer_teleop" name="armer_teleop" output="screen">
+        <param name="frame_id" value="$(arg frame_id)" />
+    </node>
 </launch>

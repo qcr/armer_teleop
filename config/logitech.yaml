@@ -1,12 +1,58 @@
-# Define the linear axis
+# Original Source: <https://github.com/husky/husky/blob/noetic-devel/husky_control/config/teleop_logitech.yaml>
+# Teleop configuration for Logitech F710 Gamepad using the x-pad configuration.
+# Left thumb-stick up/down for velocity, left/right for twist
+# LB for enable
+# RB for enable-turbo
+#
+#         (LB)                                 (RB)
+#         (LT)                                 (RT)
+#       _=====_            D(  .)X            _=====_
+#      / _____ \                             / _____ \
+#    +.-'_____'-.---------------------------.-'_____'-.+
+#   /   |     |  '.                       .'  |      |   \
+#  / ___| /|\ |___ \ (back)(Lgtc)(strt)  / ___| (Y)  |___ \
+# / |      |      | ;  __           __  ; |              | |
+# | | <---   ---> | | (__) .       (__) | | (X)       (B)| |
+# | |___   |   ___| ; MODE         VIBE ; |___       ____| /
+# |\    | \|/ |    /  _     ___      _   \    | (A) |    /|
+# | \   |_____|  .','" "', |___|  ,'" "', '.  |_____|  .' |
+# |  '-.______.-' /       \ANALOG/       \  '-._____.-'   |
+# |               |  LJ   |------|   RJ  |                |
+# |              /\       /      \       /\               |
+# |             /  '.___.'        '.___.'  \              |
+# |            /                            \             |
+#  \          /                              \           /
+#   \________/                                \_________/
+#
+# BUTTON         Value
+#   LB             4
+#   RB             5
+#   A              0
+#   B              1
+#   X              2
+#   Y              3
+#  LGTC            8 (middle button) 
+#
+#    AXIS        Value
+# Left Horiz.      0
+# Left Vert.       1
+# Right Horiz.     3
+# Right Vert.      4
+# Left Trigger     2
+# Right Trigger    5
+# D-pad Horiz.     6
+# D-pad Vert.      7
+
+# Define the linear axis control
 axis_linear_y: 0
 axis_linear_z: 1
 scale_linear: 0.7
 scale_linear_turbo: 1.5
 
+# Define angular control
 axis_angular_roll: 3 #Roll
 axis_angular_pitch: 4 #Pitch
 scale_angular: 0.4
 
 enable_button: 4  # L1 shoulder button
-enable_turbo_button: 5  # L2 shoulder button
+enable_home: 8    # Controller Home (middle) Button
