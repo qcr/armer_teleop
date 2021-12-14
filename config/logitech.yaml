@@ -52,7 +52,9 @@ scale_linear_turbo: 1.5
 # Define angular control
 axis_angular_roll: 3 #Roll
 axis_angular_pitch: 4 #Pitch
+axis_angular_yaw: 5 #Yaw - as right trigger
 scale_angular: 0.4
 
 enable_button: 4  # L1 shoulder button
 enable_home: 8    # Controller Home (middle) Button
+yaw_dir_button: 1 # B Button

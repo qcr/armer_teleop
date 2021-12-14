@@ -16,6 +16,12 @@ typedef enum
     HOMING = 2
 } TELEOP_STATES;
 
+typedef enum
+{
+    YAW_POS = 0,
+    YAW_NEG = 1
+} YAW_CONTROL;
+
 /**
  * @brief Definition of the ArmerTeleop class TODO: move to its own header
  * 
@@ -31,9 +37,12 @@ private:
     ros::NodeHandle nh_;
 
     //Control buttons/axis
-    int linear_z_, linear_y_, angular_roll_, angular_pitch_;
+    int linear_z_, linear_y_;
+    int angular_roll_, angular_pitch_, angular_yaw_;
+
     //Additional Functionality Buttons
-    int deadman_btn_, home_btn_;
+    int deadman_btn_, home_btn_, yaw_dir_btn_;
+
     //Controller Scale4s
     double l_scale_, a_scale_;
 
@@ -41,6 +50,7 @@ private:
     std::string frame_id_;
     int button_state_;
     TELEOP_STATES teleop_state_;
+    YAW_CONTROL yaw_control_;
 
     //ROS Specific
     ros::Publisher vel_pub_;
@@ -57,6 +67,8 @@ ArmerTeleop::ArmerTeleop():
     linear_y_(0), 
     angular_roll_(3), 
     angular_pitch_(4), 
+    angular_yaw_(5),
+    yaw_dir_btn_(1),
     a_scale_(0.1), 
     l_scale_(0.2),
     deadman_btn_(4),
@@ -68,6 +80,8 @@ ArmerTeleop::ArmerTeleop():
     nh_.param("axis_linear_y", linear_y_, linear_y_);
     nh_.param("axis_angular_roll", angular_roll_, angular_roll_);
     nh_.param("axis_angular_pitch", angular_pitch_, angular_pitch_);
+    nh_.param("axis_angular_yaw", angular_yaw_, angular_yaw_);
+    nh_.param("yaw_dir_button", yaw_dir_btn_, yaw_dir_btn_);
     nh_.param("scale_angular", a_scale_, a_scale_);
     nh_.param("scale_linear", l_scale_, l_scale_);
     nh_.param("enable_button", deadman_btn_, deadman_btn_);
@@ -78,6 +92,8 @@ ArmerTeleop::ArmerTeleop():
 
     // Defined internal states for telop: [0: idle, 1: enabled; 2: homed; 3: transition]
     teleop_state_ = IDLE;
+    // NOTE: unused but implemented for if we want to 'toggle' the yaw direction rather than press
+    yaw_control_ = YAW_POS;
 
     // ------- Debugging Outputs
     ROS_INFO_STREAM("linear scale: " << l_scale_ << " and angular scale: " << a_scale_);
@@ -105,6 +121,18 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     twist.angular.z = (-1.0) * a_scale_ * joy->axes[angular_roll_];
     twist.angular.y = (-1.0) * a_scale_ * joy->axes[angular_pitch_];
 
+    //Handle angular x (yaw) axis using trigger 
+    // -> trigger default is at 1 (soft trigger from 1 --> 0; full trigger then 0 --> -1)
+    // -> scale update from 1 --> 0 --> -1 || 0 --> -1 --> -2 with division by -2 for: 0 --> 0.5 --> 1
+    if(joy->buttons[yaw_dir_btn_])
+    {
+        twist.angular.x = a_scale_ * ((joy->axes[angular_yaw_] - 1.0) / -2.0); 
+    }
+    else
+    {
+        twist.angular.x = (-1.0) * a_scale_ * ((joy->axes[angular_yaw_] - 1.0) / -2.0); 
+    }
+    
     geometry_msgs::TwistStamped twist_s;
     twist_s.header.frame_id = frame_id_;
     twist_s.twist = twist;
