@@ -164,11 +164,11 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     {
         if(left_stick_pressed)
         {
-            twist.angular.x = (-1.0) * a_scale_;
+            twist.angular.x = a_scale_;
         }
         else if(right_stick_pressed)
         {
-            twist.angular.x = a_scale_;
+            twist.angular.x = (-1.0) * a_scale_;
         }
         else
         {
