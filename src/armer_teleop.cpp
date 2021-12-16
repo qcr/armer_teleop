@@ -37,11 +37,11 @@ private:
     ros::NodeHandle nh_;
 
     //Control buttons/axis
-    int linear_z_, linear_y_;
-    int angular_roll_, angular_pitch_, angular_yaw_;
+    int linear_z_, linear_y_, linear_x_pos_, linear_x_neg_;
+    int angular_roll_, angular_pitch_, angular_yaw_pos_, angular_yaw_neg_;
 
     //Additional Functionality Buttons
-    int deadman_btn_, home_btn_, yaw_dir_btn_;
+    int deadman_btn_, home_btn_;
 
     //Controller Scale4s
     double l_scale_, a_scale_;
@@ -64,11 +64,13 @@ private:
  */
 ArmerTeleop::ArmerTeleop(): 
     linear_z_(1), 
-    linear_y_(0), 
+    linear_y_(0),
+    linear_x_pos_(5),
+    linear_x_neg_(2), 
     angular_roll_(3), 
     angular_pitch_(4), 
-    angular_yaw_(5),
-    yaw_dir_btn_(1),
+    angular_yaw_pos_(10),
+    angular_yaw_neg_(9),
     a_scale_(0.1), 
     l_scale_(0.2),
     deadman_btn_(4),
@@ -78,10 +80,12 @@ ArmerTeleop::ArmerTeleop():
     // ------- Update class variables from ROS param server (loaded by launch file) ---------
     nh_.param("axis_linear_z", linear_z_, linear_z_);
     nh_.param("axis_linear_y", linear_y_, linear_y_);
+    nh_.param("axis_linear_x_positive", linear_x_pos_, linear_x_pos_);
+    nh_.param("axis_linear_x_negative", linear_x_neg_, linear_x_neg_);
     nh_.param("axis_angular_roll", angular_roll_, angular_roll_);
     nh_.param("axis_angular_pitch", angular_pitch_, angular_pitch_);
-    nh_.param("axis_angular_yaw", angular_yaw_, angular_yaw_);
-    nh_.param("yaw_dir_button", yaw_dir_btn_, yaw_dir_btn_);
+    nh_.param("axis_angular_yaw_positive", angular_yaw_pos_, angular_yaw_pos_);
+    nh_.param("axis_angular_yaw_negative", angular_yaw_neg_, angular_yaw_neg_);
     nh_.param("scale_angular", a_scale_, a_scale_);
     nh_.param("scale_linear", l_scale_, l_scale_);
     nh_.param("enable_button", deadman_btn_, deadman_btn_);
@@ -116,21 +120,60 @@ ArmerTeleop::ArmerTeleop():
 void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     geometry_msgs::Twist        twist;
+    
+    // Prepare linear twists
     twist.linear.z = l_scale_ * joy->axes[linear_z_];
     twist.linear.y = (-1.0) * l_scale_ * joy->axes[linear_y_]; //To make sense of axis (positive of end-effector is right, but joy is left)
-    twist.angular.z = (-1.0) * a_scale_ * joy->axes[angular_roll_];
-    twist.angular.y = (-1.0) * a_scale_ * joy->axes[angular_pitch_];
 
-    //Handle angular x (yaw) axis using trigger 
-    // -> trigger default is at 1 (soft trigger from 1 --> 0; full trigger then 0 --> -1)
-    // -> scale update from 1 --> 0 --> -1 || 0 --> -1 --> -2 with division by -2 for: 0 --> 0.5 --> 1
-    if(joy->buttons[yaw_dir_btn_])
+    //Get both axes (trigger left and right buttons)
+    // --> if one is greater than 0 (triggered) apply this value to the twist
+    double trigger_left = ((joy->axes[linear_x_pos_] - 1.0) / -2.0);
+    double trigger_right = ((joy->axes[linear_x_neg_] - 1.0) / -2.0);
+    if(trigger_right > 0 && trigger_left > 0)
     {
-        twist.angular.x = a_scale_ * ((joy->axes[angular_yaw_] - 1.0) / -2.0); 
+        //Do nothing, as both triggers are active
     }
     else
     {
-        twist.angular.x = (-1.0) * a_scale_ * ((joy->axes[angular_yaw_] - 1.0) / -2.0); 
+        if(trigger_left > 0)
+        {
+            twist.linear.x = l_scale_ * trigger_left;
+        }
+        else if(trigger_right > 0)
+        {
+            twist.linear.x = (-1.0) * l_scale_ * trigger_right;
+        }
+        else
+        {
+            twist.linear.x = 0.0;
+        }
+    }
+    
+    // Prepare angular twists
+    twist.angular.z = (-1.0) * a_scale_ * joy->axes[angular_roll_];
+    twist.angular.y = (-1.0) * a_scale_ * joy->axes[angular_pitch_];
+
+    //Handle angular x (yaw) axis using analogue buttons
+    int left_stick_pressed = joy->buttons[angular_yaw_pos_];
+    int right_stick_pressed = joy->buttons[angular_yaw_neg_];
+    if(left_stick_pressed && right_stick_pressed)
+    {
+        //Do nothing, as both sticks are pressed
+    }
+    else
+    {
+        if(left_stick_pressed)
+        {
+            twist.angular.x = (-1.0) * a_scale_;
+        }
+        else if(right_stick_pressed)
+        {
+            twist.angular.x = a_scale_;
+        }
+        else
+        {
+            twist.angular.x = 0.0;
+        }
     }
     
     geometry_msgs::TwistStamped twist_s;
