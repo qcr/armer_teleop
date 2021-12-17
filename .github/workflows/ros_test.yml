@@ -28,4 +28,4 @@ jobs:
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           package-name: armer_teleop
-          target-ros2-distro: noetic
+          target-ros1-distro: noetic
