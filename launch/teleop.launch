@@ -1,8 +1,9 @@
 <launch>
     <!-- Load in armer_teleop param (configurable ) -->
-    <arg name="frame_id" default="tool0" doc="This is the frame id given to the particular EE frame of a given robot" />
-    <arg name="abb_model" default="6700" doc="The robot model being used - default is the IRB6700-200/2.6" />
-    <arg name="trig_val" default="true" doc="If this parameter is not set (i.e., false), the triggers report a value of 0.0 until they are touched" />
+    <arg name="frame_id_EE"     default="tool0"     doc="This is the frame id given to the particular EE frame of a given robot" />
+    <arg name="frame_id_base"   default="base_link" doc="This is the base frame of the robot - specify if different to base_link" />
+    <arg name="abb_model"       default="6700"      doc="The robot model being used - default is the IRB6700-200/2.6" />
+    <arg name="trig_val"        default="true"      doc="If this parameter is not set (i.e., false), the triggers report a value of 0.0 until they are touched" />
     
     <!-- Load the logitech yaml file by default -->
     <rosparam file="$(find armer_teleop)/config/logitech.yaml"/>
@@ -14,7 +15,9 @@
         <param name="default_trig_val" value="$(arg trig_val)"/> 
     </node>
 
+    <!-- Default set frame ID as the end effector (EE) frame of choice -->
     <node pkg="armer_teleop" type="armer_teleop" name="armer_teleop" output="screen">
-        <param name="frame_id" value="$(arg frame_id)" />
+        <param name="frame_id" value="$(arg frame_id_EE)" />
+        <param name="base_frame" value="$(arg frame_id_base)" />
     </node>
 </launch>

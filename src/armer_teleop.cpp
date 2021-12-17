@@ -18,9 +18,16 @@ typedef enum
 
 typedef enum
 {
-    YAW_POS = 0,
-    YAW_NEG = 1
-} YAW_CONTROL;
+    EE_FRAME = 0,
+    BASE_FRAME = 1
+} FRAME_CONTROL;
+
+
+typedef enum
+{
+    OFF = 0,
+    ON = 1
+} BUTTON_STATES;
 
 /**
  * @brief Definition of the ArmerTeleop class TODO: move to its own header
@@ -41,16 +48,19 @@ private:
     int angular_roll_, angular_pitch_, angular_yaw_pos_, angular_yaw_neg_;
 
     //Additional Functionality Buttons
-    int deadman_btn_, home_btn_;
+    int deadman_btn_, home_btn_, toggle_frame_btn_;
+    int frame_toggle_count_;
 
     //Controller Scale4s
     double l_scale_, a_scale_;
 
     //Other Variables
     std::string frame_id_;
+    std::string base_frame_;
     int button_state_;
     TELEOP_STATES teleop_state_;
-    YAW_CONTROL yaw_control_;
+    FRAME_CONTROL frame_control_;
+    BUTTON_STATES frame_btn_states_;
 
     //ROS Specific
     ros::Publisher vel_pub_;
@@ -75,7 +85,9 @@ ArmerTeleop::ArmerTeleop():
     l_scale_(0.2),
     deadman_btn_(4),
     home_btn_(8),
-    frame_id_("tool0")
+    frame_id_("tool0"),
+    base_frame_("base_link"),
+    toggle_frame_btn_(0)
 {
     // ------- Update class variables from ROS param server (loaded by launch file) ---------
     nh_.param("axis_linear_z", linear_z_, linear_z_);
@@ -90,14 +102,19 @@ ArmerTeleop::ArmerTeleop():
     nh_.param("scale_linear", l_scale_, l_scale_);
     nh_.param("enable_button", deadman_btn_, deadman_btn_);
     nh_.param("enable_home", home_btn_, home_btn_);
+    nh_.param("toggle_frame", toggle_frame_btn_, toggle_frame_btn_);
 
     // ------- Get node specific params (loaded by launch file)
     nh_.getParam("/armer_teleop/frame_id", frame_id_);
+    nh_.getParam("/armer_teleop/base_frame", base_frame_);
 
     // Defined internal states for telop: [0: idle, 1: enabled; 2: homed; 3: transition]
     teleop_state_ = IDLE;
-    // NOTE: unused but implemented for if we want to 'toggle' the yaw direction rather than press
-    yaw_control_ = YAW_POS;
+    // Defined state for toggling (using the A button) between base and ee frame - defaults to EE
+    frame_control_ = EE_FRAME;
+    // Debouncing the button input for toggling of state
+    frame_btn_states_ = OFF; 
+    frame_toggle_count_ = 0;
 
     // ------- Debugging Outputs
     ROS_INFO_STREAM("linear scale: " << l_scale_ << " and angular scale: " << a_scale_);
@@ -175,10 +192,37 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
             twist.angular.x = 0.0;
         }
     }
+
+    // Update frame from button press - if pressed
+    if(joy->buttons[toggle_frame_btn_] && frame_btn_states_ == OFF) frame_btn_states_ = ON;
+    else if(!joy->buttons[toggle_frame_btn_] && frame_btn_states_ == ON) 
+    {
+        frame_toggle_count_++;
+        frame_btn_states_ = OFF;
+    }
+
+    if(frame_toggle_count_ && frame_control_ == EE_FRAME)
+    {
+        ROS_INFO_STREAM("SWITCHED TO BASE_FRAME");
+        frame_control_ = BASE_FRAME;
+        frame_toggle_count_ = 0;
+    }
+    else if(frame_toggle_count_ && frame_control_ == BASE_FRAME)
+    {
+        ROS_INFO_STREAM("SWITCHED TO EE_FRAME");
+        frame_control_ = EE_FRAME;
+        frame_toggle_count_ = 0;
+    }
     
+    // Define the twist stamped message to publish modifed twist from above
     geometry_msgs::TwistStamped twist_s;
-    twist_s.header.frame_id = frame_id_;
     twist_s.twist = twist;
+
+    // Determine required frame
+    if(frame_control_ == EE_FRAME)
+        twist_s.header.frame_id = frame_id_;
+    else
+        twist_s.header.frame_id = base_frame_;
 
     if (joy->buttons[deadman_btn_] && teleop_state_ != HOMING)
     {

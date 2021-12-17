@@ -60,3 +60,4 @@ scale_angular: 0.4
 
 enable_button: 4  # L1 shoulder button
 enable_home: 8    # Controller Home (middle) Button
+toggle_frame: 0   # Toggles between EE frame (specified in launch by default) or Base Frame
