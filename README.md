@@ -1,6 +1,7 @@
 # Armer (Manipulation Package) Teleoperation
 [![QUT Centre for Robotics Open Source](https://github.com/qcr/qcr.github.io/raw/master/misc/badge.svg)](https://qcr.github.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![ROS Build Status](https://github.com/qcr/armer_teleop/actions/workflows/ros_test.yml/badge.svg)](https://github.com/qcr/armer_teleop/actions/workflows/ros_test.yml)
 
 This is a teleoperation driver based on joy for the Armer driver. For the installation and usage of this package, please see the subsequent sections below:
 

@@ -28,4 +28,6 @@ jobs:
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           package-name: armer_teleop
+          # If there are no private dependencies, no need to create a PAT or add a secret
+          import-token: ${{ secrets.GITHUB_TOKEN }}
           target-ros1-distro: noetic
