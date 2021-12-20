@@ -1,0 +1,4 @@
+<launch>
+    <!-- Unit testing of armer_teleop node -->
+    <test test-name="armer_teleop_test" pkg="armer_teleop" type="armer_teleop_test" />
+</launch>
