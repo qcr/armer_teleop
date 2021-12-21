@@ -48,7 +48,7 @@ axis_linear_y: 0
 axis_linear_z: 1
 axis_linear_x_positive: 5 # Positive motion as right trigger
 axis_linear_x_negative: 2 # Negative motion as left trigger
-scale_linear: 0.4
+scale_linear: 0.2         # Large scaling for safety
 scale_linear_turbo: 1.5
 
 # Define angular control
