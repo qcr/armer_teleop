@@ -203,7 +203,7 @@ target_link_libraries(${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(armer_teleop_test test/teleop_test.launch test/unittest.cpp)
+  add_rostest_gtest(armer_teleop_test test/unittests.test test/unittest.cpp)
   target_link_libraries(armer_teleop_test ${catkin_LIBRARIES})
 endif()
 
