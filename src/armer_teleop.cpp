@@ -2,7 +2,7 @@
 
 /**
  * @brief Construct a new Armer Teleop:: Armer Teleop object
- * 
+ *       - NOTE: default arguments based on logitech controller configuration
  */
 ArmerTeleop::ArmerTeleop(): 
     linear_z_(1), 

@@ -1,0 +1,65 @@
+# Based On: <https://github.com/husky/husky/blob/noetic-devel/husky_control/config/teleop_logitech.yaml>
+# Teleop configuration for PS4 Game Controller.
+# Left thumb-stick up/down for velocity, left/right for twist
+# L1 for enable
+# RB for enable-turbo
+#
+#         (L2)                                 (R2)
+#         (L1)                                 (R1)
+#       _=====_                               _=====_
+#      / _____ \                             / _____ \
+#    +.-'_____'-.---------------------------.-'_____'-.+
+#   /   |     |  '.                       .'  |      |   \
+#  / ___| /|\ |___ \ (shr) (touch) (opt) / ___| (tr) |___ \
+# / |      |      | ;                   ; |              | |
+# | | <---   ---> | |                   | | (sq)     (O) | |
+# | |___   |   ___| ;                   ; |___       ____| /
+# |\    | \|/ |    /  _     ___      _   \    | (X) |    /|
+# | \   |_____|  .','" "', |___|  ,'" "', '.  |_____|  .' |
+# |  '-.______.-' /       \PS btn/       \  '-._____.-'   |
+# |               |  LJ   |------|   RJ  |                |
+# |              /\       /      \       /\               |
+# |             /  '.___.'        '.___.'  \              |
+# |            /                            \             |
+#  \          /                              \           /
+#   \________/                                \_________/
+#
+# BUTTON                  Value
+#   L1                      4
+#   R1                      5
+#   X                       0
+#   O (circle)              1
+#   tr (triangle)           2
+#   sq (square)             3
+#   PS btn                  10 (middle button) 
+#   LJ (pressed)            11
+#   RJ (pressed)            12
+#
+#    AXIS         Value
+# LJ Horiz.         0
+# LJ Vert.          1
+# RJ Horiz.         3
+# RJ Vert.          4
+# L2                2
+# R2                5
+# D-pad Horiz.      6
+# D-pad Vert.       7
+
+# Define the linear axis control
+axis_linear_y: 0
+axis_linear_z: 1
+axis_linear_x_positive: 5 # Positive motion as R2
+axis_linear_x_negative: 2 # Negative motion as L2
+scale_linear: 0.2         # Large scaling for safety
+scale_linear_turbo: 1.5
+
+# Define angular control
+axis_angular_roll: 3 #Roll
+axis_angular_pitch: 4 #Pitch
+axis_angular_yaw_positive: 12 #Yaw positive - as RJ click (constant vel)
+axis_angular_yaw_negative: 11 #Yaw negative - as LJ stick click (constant vel)
+scale_angular: 0.4
+
+enable_button: 4    # L1 shoulder button
+enable_home: 10     # Controller Home (middle) Button
+toggle_frame: 0     # Toggles between EE frame (specified in launch by default) or Base Frame
