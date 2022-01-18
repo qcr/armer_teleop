@@ -50,5 +50,3 @@ jobs:
       - name: Build and Run Tests 
         run: |
           cd test_ws && catkin_make run_tests
-          source devel/setup.bash
-          rostest ${{ github.event.repository.name }} unittests.test
