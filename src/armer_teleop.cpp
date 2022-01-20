@@ -43,7 +43,7 @@ ArmerTeleop::ArmerTeleop():
     nh_.getParam("/armer_teleop/frame_id", _frame_id);
     nh_.getParam("/armer_teleop/base_frame", _base_frame);
 
-    // Defined internal states for telop: [0: idle, 1: enabled; 2: homed; 3: transition]
+    // Defined internal states for teleop: [0: idle, 1: enabled; 2: homed; 3: transition]
     _teleop_state = IDLE;
     // Defined state for toggling (using the A button) between base and ee frame - defaults to EE
     _frame_control = EE_FRAME;
