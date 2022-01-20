@@ -40,43 +40,62 @@ typedef enum
 } BUTTON_STATES;
 
 /**
- * @brief Definition of the ArmerTeleop class TODO: move to its own header
+ * @brief Definition of the ArmerTeleop class
  * 
  */
 class ArmerTeleop
 {
 public:
+    // Constructors and Destructors
     ArmerTeleop();
     ~ArmerTeleop();
 
+    // Get and Set Methods
+    FRAME_CONTROL GetCurrentFrame( void ) { return _frame_control; }
+    BUTTON_STATES GetFrameBtnState( void ) { return _frame_btn_states; }
+
+    // gTest Friendly Methods
+    bool ClassConstructionSuccess( void ) { return _class_construction; }
+    int TestUpdateFrame( std::vector<int> buttons ) { return UpdateFrame(buttons); }
+
 private:
+    // Private Functions
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+    int UpdateFrame( std::vector<int> buttons );
+    int ConfigureTwist( 
+        geometry_msgs::Twist &twist,
+        std::vector<float> axes,
+        std::vector<int> buttons 
+    );
 
     ros::NodeHandle nh_;
 
     //Control buttons/axis
-    int linear_z_, linear_y_, linear_x_pos_, linear_x_neg_;
-    int angular_roll_, angular_pitch_, angular_yaw_pos_, angular_yaw_neg_;
+    int _linear_z, _linear_y, _linear_x_pos, _linear_x_neg;
+    int _angular_roll, _angular_pitch, _angular_yaw_pos, _angular_yaw_neg;
 
     //Additional Functionality Buttons
-    int deadman_btn_, home_btn_, toggle_frame_btn_;
-    int frame_toggle_count_;
+    int _deadman_btn, _home_btn, _toggle_frame_btn;
+    int _frame_toggle_count;
 
-    //Controller Scale4s
-    double l_scale_, a_scale_;
-
-    //Other Variables
-    std::string frame_id_;
-    std::string base_frame_;
-    int button_state_;
-    TELEOP_STATES teleop_state_;
-    FRAME_CONTROL frame_control_;
-    BUTTON_STATES frame_btn_states_;
+    //Controller Scales
+    double _l_scale, _a_scale;
 
     //ROS Specific
-    ros::Publisher vel_pub_;
-    ros::Subscriber joy_sub_;
-    ros::ServiceClient home_srv_;
+    ros::Publisher _vel_pub;
+    ros::Subscriber _joy_sub;
+    ros::ServiceClient _home_srv;
+
+    //Test Variables
+    bool _class_construction;
+
+    //Other Variables
+    std::string _frame_id;
+    std::string _base_frame;
+    int _button_state;
+    TELEOP_STATES _teleop_state;
+    FRAME_CONTROL _frame_control;
+    BUTTON_STATES _frame_btn_states;
 };
 
 #endif

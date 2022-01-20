@@ -120,9 +120,9 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/armer_teleop.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/armer_teleop.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -132,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/armer_teleop.cpp)
+# add_executable(${PROJECT_NAME} src/armer_teleop.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -204,7 +204,7 @@ target_link_libraries(${PROJECT_NAME}
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(armer_teleop_test test/unittests.test test/unittest.cpp)
-  target_link_libraries(armer_teleop_test ${catkin_LIBRARIES})
+  target_link_libraries(armer_teleop_test ${catkin_LIBRARIES} ${PROJECT_NAME})
 endif()
 
 ## Add folders to be run by python nosetests
