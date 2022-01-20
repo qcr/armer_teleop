@@ -6,8 +6,8 @@
 This is a teleoperation driver based on joy for the Armer driver. For the installation and usage of this package, please see the subsequent sections below:
 
 ## Supported Controllers
-- Logitech Gamepad F710
-- PS4 Controller
+- Logitech Wireless Gamepad F710
+- PS4 Wireless Controller
 
 ## Installation
 Copy and paste the following code snippet into a terminal to create a new catkin workspace and install the armer_teleop to it. Note that, the armer package is not required as a dependency, as the package can be run from an external camera. If directly used with Armer, it is recommended to be placed in the same catkin_ws for ease of use.
