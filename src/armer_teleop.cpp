@@ -4,40 +4,42 @@
  * @brief Construct a new Armer Teleop:: Armer Teleop object
  *       - NOTE: default arguments based on logitech controller configuration
  */
-ArmerTeleop::ArmerTeleop(): 
-    _linear_z(1), 
-    _linear_y(0),
-    _linear_x_pos(5),
-    _linear_x_neg(2), 
-    _angular_roll(3), 
-    _angular_pitch(4), 
-    _angular_yaw_pos(10),
-    _angular_yaw_neg(9),
-    _a_scale(0.1), 
-    _l_scale(0.2),
-    _deadman_btn(4),
-    _home_btn(8),
-    _frame_id("tool0"),
-    _base_frame("base_link"),
-    _toggle_frame_btn(0)
+ArmerTeleop::ArmerTeleop()
 {
     // Not constructed yet
     _class_construction = false;
 
-    // ------- Update class variables from ROS param server (loaded by launch file) ---------
-    nh_.param("axis_linear_z", _linear_z, _linear_z);
-    nh_.param("axis_linear_y", _linear_y, _linear_y);
-    nh_.param("axis_linear_x_positive", _linear_x_pos, _linear_x_pos);
-    nh_.param("axis_linear_x_negative", _linear_x_neg, _linear_x_neg);
-    nh_.param("axis_angular_roll", _angular_roll, _angular_roll);
-    nh_.param("axis_angular_pitch", _angular_pitch, _angular_pitch);
-    nh_.param("axis_angular_yaw_positive", _angular_yaw_pos, _angular_yaw_pos);
-    nh_.param("axis_angular_yaw_negative", _angular_yaw_neg, _angular_yaw_neg);
-    nh_.param("scale_angular", _a_scale, _a_scale);
-    nh_.param("scale_linear", _l_scale, _l_scale);
-    nh_.param("enable_button", _deadman_btn, _deadman_btn);
-    nh_.param("enable_home", _home_btn, _home_btn);
-    nh_.param("toggle_frame", _toggle_frame_btn, _toggle_frame_btn);
+    // ------ Apply Defaults
+    _joy_params.linear_z = 1; 
+    _joy_params.linear_y = 0;
+    _joy_params.linear_x_pos = 5;
+    _joy_params.linear_x_neg = 2; 
+    _joy_params.angular_roll = 3; 
+    _joy_params.angular_pitch = 4; 
+    _joy_params.angular_yaw_pos = 10;
+    _joy_params.angular_yaw_neg = 9;
+    _joy_params.angular_scale = 0.1; 
+    _joy_params.linear_scale = 0.2;
+    _joy_params.deadman_btn = 4;
+    _joy_params.home_btn = 8;
+    _joy_params.toggle_frame_btn = 0;
+    _frame_id = "tool0"; //Default to end-effector name tool0
+    _base_frame = "base_link"; //Default base frame name
+
+    // ------- Update (if needed) class variables from ROS param server (loaded by launch file) ---------
+    nh_.param("axis_linear_z", _joy_params.linear_z, _joy_params.linear_z);
+    nh_.param("axis_linear_y", _joy_params.linear_y, _joy_params.linear_y);
+    nh_.param("axis_linear_x_positive", _joy_params.linear_x_pos, _joy_params.linear_x_pos);
+    nh_.param("axis_linear_x_negative", _joy_params.linear_x_neg, _joy_params.linear_x_neg);
+    nh_.param("axis_angular_roll", _joy_params.angular_roll, _joy_params.angular_roll);
+    nh_.param("axis_angular_pitch", _joy_params.angular_pitch, _joy_params.angular_pitch);
+    nh_.param("axis_angular_yaw_positive", _joy_params.angular_yaw_pos, _joy_params.angular_yaw_pos);
+    nh_.param("axis_angular_yaw_negative", _joy_params.angular_yaw_neg, _joy_params.angular_yaw_neg);
+    nh_.param("scale_angular", _joy_params.angular_scale, _joy_params.angular_scale);
+    nh_.param("scale_linear", _joy_params.linear_scale, _joy_params.linear_scale);
+    nh_.param("enable_button", _joy_params.deadman_btn, _joy_params.deadman_btn);
+    nh_.param("enable_home", _joy_params.home_btn, _joy_params.home_btn);
+    nh_.param("toggle_frame", _joy_params.toggle_frame_btn, _joy_params.toggle_frame_btn);
 
     // ------- Get node specific params (loaded by launch file)
     nh_.getParam("/armer_teleop/frame_id", _frame_id);
@@ -52,7 +54,7 @@ ArmerTeleop::ArmerTeleop():
     _frame_toggle_count = 0;
 
     // ------- Debugging Outputs
-    ROS_INFO_STREAM("linear scale: " << _l_scale << " and angular scale: " << _a_scale);
+    ROS_INFO_STREAM("linear scale: " << _joy_params.linear_scale << " and angular scale: " << _joy_params.angular_scale);
     ROS_INFO_STREAM("Frame ID of robot: " << _frame_id);
 
     // ------- Required publishers and subscribers
@@ -94,13 +96,13 @@ int ArmerTeleop::ConfigureTwist
     int output = 0;
 
     // Prepare linear twists
-    twist.linear.z = _l_scale * axes[_linear_z];
-    twist.linear.y = (-1.0) * _l_scale * axes[_linear_y]; //To make sense of axis (positive of end-effector is right, but joy is left)
+    twist.linear.z = _joy_params.linear_scale * axes[_joy_params.linear_z];
+    twist.linear.y = _joy_params.linear_scale * axes[_joy_params.linear_y];
 
     //Get both axes (trigger left and right buttons)
     // --> if one is greater than 0 (triggered) apply this value to the twist
-    double trigger_left = ((axes[_linear_x_pos] - 1.0) / -2.0);
-    double trigger_right = ((axes[_linear_x_neg] - 1.0) / -2.0);
+    double trigger_left = ((axes[_joy_params.linear_x_pos] - 1.0) / -2.0);
+    double trigger_right = ((axes[_joy_params.linear_x_neg] - 1.0) / -2.0);
     if(trigger_right > 0 && trigger_left > 0)
     {
         //Do nothing, as both triggers are active
@@ -111,11 +113,11 @@ int ArmerTeleop::ConfigureTwist
         // Apply expected behaviour (left or right) directional movement
         if(trigger_left > 0)
         {
-            twist.linear.x = _l_scale * trigger_left;
+            twist.linear.x = _joy_params.linear_scale * trigger_left;
         }
         else if(trigger_right > 0)
         {
-            twist.linear.x = (-1.0) * _l_scale * trigger_right;
+            twist.linear.x = (-1.0) * _joy_params.linear_scale * trigger_right;
         }
         else
         {
@@ -124,12 +126,12 @@ int ArmerTeleop::ConfigureTwist
     }
     
     // Prepare angular twists
-    twist.angular.z = (-1.0) * _a_scale * axes[_angular_roll];
-    twist.angular.y = (-1.0) * _a_scale * axes[_angular_pitch];
+    twist.angular.z = _joy_params.angular_scale * axes[_joy_params.angular_roll];
+    twist.angular.y = _joy_params.angular_scale * axes[_joy_params.angular_pitch];
 
     //Handle angular x (yaw) axis using analogue buttons
-    int left_stick_pressed = buttons[_angular_yaw_pos];
-    int right_stick_pressed = buttons[_angular_yaw_neg];
+    int left_stick_pressed = buttons[_joy_params.angular_yaw_pos];
+    int right_stick_pressed = buttons[_joy_params.angular_yaw_neg];
     if(left_stick_pressed && right_stick_pressed)
     {
         //Do nothing, as both sticks are pressed
@@ -140,11 +142,11 @@ int ArmerTeleop::ConfigureTwist
         // Apply expected behaviour (left or right) directional movement
         if(left_stick_pressed)
         {
-            twist.angular.x = _a_scale;
+            twist.angular.x = _joy_params.angular_scale;
         }
         else if(right_stick_pressed)
         {
-            twist.angular.x = (-1.0) * _a_scale;
+            twist.angular.x = (-1.0) * _joy_params.angular_scale;
         }
         else
         {
@@ -173,12 +175,12 @@ int ArmerTeleop::UpdateFrame( std::vector<int> buttons )
     // it was previously OFF. On release of button, and the state was set to ON, 
     // state is set back to OFF and a toggle counter is incremented. If this toggle
     // counter is non-zero, then the functionality of the button is run.
-    if(buttons[_toggle_frame_btn] && _frame_btn_states == OFF) 
+    if(buttons[_joy_params.toggle_frame_btn] && _frame_btn_states == OFF) 
     {
         _frame_btn_states = ON;
         output = 1;
     }
-    else if(!buttons[_toggle_frame_btn] && _frame_btn_states == ON) 
+    else if(!buttons[_joy_params.toggle_frame_btn] && _frame_btn_states == ON) 
     {
         _frame_toggle_count++;
         _frame_btn_states = OFF;
@@ -243,7 +245,7 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
     // Publish twist stamped message ONLY if deadman is pressed
     // and we are NOT homing
-    if (buttons[_deadman_btn] && _teleop_state != HOMING)
+    if (buttons[_joy_params.deadman_btn] && _teleop_state != HOMING)
     {
         //Trigger publish only if DEADMAN is pressed
         _vel_pub.publish(twist_s);
@@ -252,7 +254,7 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         _teleop_state = ENABLED;
     }
     // Execute the Armer Driver Homing functionality via ROS action server
-    else if ( buttons[_home_btn] )
+    else if ( buttons[_joy_params.home_btn] )
     {
         //Set state to HOMING
         _teleop_state = HOMING; 
