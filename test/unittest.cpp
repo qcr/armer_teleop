@@ -8,7 +8,7 @@
  * @brief Tests the creation of the armer_teleop class
  * 
  */
-TEST( ArmerTeleopFunctionality, classCreationTest )
+TEST( ArmerTeleopFunctionality, ClassCreationTest )
 {
     ros::NodeHandle nh("~");
     ArmerTeleop new_class;
@@ -19,7 +19,7 @@ TEST( ArmerTeleopFunctionality, classCreationTest )
  * @brief Tests the toggle of the frame state and the button states
  * 
  */
-TEST( ArmerTeleopFunctionality, frameChangeTest )
+TEST( ArmerTeleopFunctionality, FrameChangeTest )
 {   
     ros::NodeHandle nh("~");
     BUTTON_STATES btn_state;
@@ -76,7 +76,6 @@ TEST( ArmerTeleopFunctionality, LogitechConfigTwistTest )
     ros::NodeHandle nh("~");
     ArmerTeleop teleop_class;
     geometry_msgs::Twist test_twist;
-    FRAME_CONTROL test_frame = BASE_FRAME;
     joy_params test_params;
     // axes array is 8 elements long (same for logitech and ps4)
     std::vector<float> axes = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -86,22 +85,23 @@ TEST( ArmerTeleopFunctionality, LogitechConfigTwistTest )
     // Set frame to BASE_LINK for comparing (Z: up/down | Y: left/right | X: forward/back) 
     // ---> note that all axis configurations are pos/neg expected
     // Also get the current params for testing (default)
+    FRAME_CONTROL test_frame = BASE_FRAME;
     teleop_class.SetFrame(test_frame);
     test_params = teleop_class.GetJoyParams();
 
     // Test a simulated left stick pushed directly left (pos) for linear in y axis response
-    axes[test_params.linear_y] = 1;
+    axes[test_params.linear_y] = 1.0;
     teleop_class.TestConfigureTwist(test_twist, axes, buttons);
     // Expect positive linear y velocity and max linear scale
     EXPECT_GT(test_twist.linear.y, 0);
-    EXPECT_NEAR(test_twist.linear.y, test_params.linear_scale, 0.1);
+    EXPECT_NEAR(test_twist.linear.y, test_params.linear_scale, 0.01);
 
     // Test a simulated left stick pushed directly right (neg) for neg linear in y axis response
-    axes[test_params.linear_y] = -1;
+    axes[test_params.linear_y] = -1.0;
     teleop_class.TestConfigureTwist(test_twist, axes, buttons);
     // Expect neg linear y velocity and max neg linear scale
     EXPECT_LT(test_twist.linear.y, 0);
-    EXPECT_NEAR(test_twist.linear.y, -(1.0) * test_params.linear_scale, 0.1);
+    EXPECT_NEAR(test_twist.linear.y, -(1.0) * test_params.linear_scale, 0.01);
 
     
 

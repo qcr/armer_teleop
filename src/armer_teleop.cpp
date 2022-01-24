@@ -55,7 +55,6 @@ ArmerTeleop::ArmerTeleop()
 
     // ------- Debugging Outputs
     ROS_INFO_STREAM("linear scale: " << _joy_params.linear_scale << " and angular scale: " << _joy_params.angular_scale);
-    ROS_INFO_STREAM("Frame ID of robot: " << _frame_id);
 
     // ------- Required publishers and subscribers
     _vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("arm/cartesian/velocity", 1);
@@ -276,17 +275,17 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
 }
 
-/**
- * @brief Main function of node
- * 
- * @param argc 
- * @param argv 
- * @return int 
- */
-int main(int argc, char** argv)
-{
-    ros::init(argc, argv, "armer_teleop");
-    ArmerTeleop armer_teleop;
+// /**
+//  * @brief Main function of node
+//  * 
+//  * @param argc 
+//  * @param argv 
+//  * @return int 
+//  */
+// int main(int argc, char** argv)
+// {
+//     ros::init(argc, argv, "armer_teleop");
+//     ArmerTeleop armer_teleop;
 
-    ros::spin();
-}
+//     ros::spin();
+// }

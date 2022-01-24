@@ -23,7 +23,7 @@
     </node>
 
     <!-- Default set frame ID as the end effector (EE) frame of choice -->
-    <node pkg="armer_teleop" type="armer_teleop" name="armer_teleop" output="screen">
+    <node pkg="armer_teleop" type="armer_teleop_node" name="armer_teleop_node" output="screen">
         <param name="frame_id" value="$(arg frame_id_EE)" />
         <param name="base_frame" value="$(arg frame_id_base)" />
     </node>
