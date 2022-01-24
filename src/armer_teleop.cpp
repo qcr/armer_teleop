@@ -9,20 +9,22 @@ ArmerTeleop::ArmerTeleop()
     // Not constructed yet
     _class_construction = false;
 
-    // ------ Apply Defaults
+    // ------ Apply Defaults (based on logitech)
     _joy_params.linear_z = 1; 
     _joy_params.linear_y = 0;
-    _joy_params.linear_x_pos = 5;
-    _joy_params.linear_x_neg = 2; 
+    _joy_params.linear_x_pos = 2;
+    _joy_params.linear_x_neg = 5; 
     _joy_params.angular_roll = 3; 
     _joy_params.angular_pitch = 4; 
-    _joy_params.angular_yaw_pos = 10;
-    _joy_params.angular_yaw_neg = 9;
-    _joy_params.angular_scale = 0.1; 
+    _joy_params.angular_yaw_pos = 9;
+    _joy_params.angular_yaw_neg = 10;
+    _joy_params.angular_scale = 0.4; 
     _joy_params.linear_scale = 0.2;
     _joy_params.deadman_btn = 4;
     _joy_params.home_btn = 8;
     _joy_params.toggle_frame_btn = 0;
+    _joy_params.max_axes_size = 8;
+    _joy_params.max_btns_size = 11;
     _frame_id = "tool0"; //Default to end-effector name tool0
     _base_frame = "base_link"; //Default base frame name
 
@@ -40,6 +42,8 @@ ArmerTeleop::ArmerTeleop()
     nh_.param("enable_button", _joy_params.deadman_btn, _joy_params.deadman_btn);
     nh_.param("enable_home", _joy_params.home_btn, _joy_params.home_btn);
     nh_.param("toggle_frame", _joy_params.toggle_frame_btn, _joy_params.toggle_frame_btn);
+    nh_.param("max_axes_size", _joy_params.max_axes_size, _joy_params.max_axes_size);
+    nh_.param("max_btns_size", _joy_params.max_btns_size, _joy_params.max_btns_size);
 
     // ------- Get node specific params (loaded by launch file)
     nh_.getParam("/armer_teleop/frame_id", _frame_id);
@@ -52,13 +56,22 @@ ArmerTeleop::ArmerTeleop()
     // Debouncing the button input for toggling of state
     _frame_btn_states = OFF; 
     _frame_toggle_count = 0;
+    // Setup trigger and analogue stick (pressed) initial states
+    _trigger_left = 1;          //Joy node idle value for triggers (remapped to 0 by class)
+    _trigger_right = 1;         //Joy node idle value for triggers (remapped to 0 by class)
+    _left_stick_pressed = 0;    //Joy node idle value for buttons
+    _right_stick_pressed = 0;   //Joy node idle value for buttons
+
+    // Initialise class axes and button arrays with sizes based on controller used
+    _axes.assign(_joy_params.max_axes_size, 0);
+    _buttons.assign(_joy_params.max_btns_size, 0);
 
     // ------- Debugging Outputs
     ROS_INFO_STREAM("linear scale: " << _joy_params.linear_scale << " and angular scale: " << _joy_params.angular_scale);
 
     // ------- Required publishers and subscribers
     _vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("arm/cartesian/velocity", 1);
-    _joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &ArmerTeleop::joyCallback, this);
+    _joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &ArmerTeleop::JoyCallback, this);
 
     // ------- Required Services (Home)
     _home_srv = nh_.serviceClient<std_srvs::Empty>("/arm/home");
@@ -94,15 +107,27 @@ int ArmerTeleop::ConfigureTwist
     // output status
     int output = 0;
 
-    // Prepare linear twists
-    twist.linear.z = _joy_params.linear_scale * axes[_joy_params.linear_z];
-    twist.linear.y = _joy_params.linear_scale * axes[_joy_params.linear_y];
+    // clamp check (-1.0 or 1.0) in axes input
+    ClampInput(axes, (float)-1.0, (float)1.0);
+    // clamp check (0 or 1) in button input
+    ClampInput(buttons, 0, 1);
 
-    //Get both axes (trigger left and right buttons)
-    // --> if one is greater than 0 (triggered) apply this value to the twist
-    double trigger_left = ((axes[_joy_params.linear_x_pos] - 1.0) / -2.0);
-    double trigger_right = ((axes[_joy_params.linear_x_neg] - 1.0) / -2.0);
-    if(trigger_right > 0 && trigger_left > 0)
+    // Update class axes and buttons - Used for Testing
+    _axes = axes;
+    _buttons = buttons;
+    
+    // Prepare linear twists (z and y)
+    twist.linear.z = _joy_params.linear_scale * axes[_joy_params.linear_z]; //UP/DOWN in Base Frame
+    twist.linear.y = _joy_params.linear_scale * axes[_joy_params.linear_y]; //LEFT/RIGHT in Base Frame
+
+    //Get both axes (trigger left and right buttons) for x axis twist
+    // Trigger ranges (default) to 1.0 --> -1.0. The following changes this input
+    // to between 0 --> 1.0, where 0 is the idle state and pressed in fully is 1.0
+    _trigger_left = ((axes[_joy_params.linear_x_pos] - 1.0) / -2.0);
+    _trigger_right = ((axes[_joy_params.linear_x_neg] - 1.0) / -2.0);
+
+    // Resolve for both triggers pressed at once
+    if(_trigger_right > 0 && _trigger_left > 0)
     {
         //Do nothing, as both triggers are active
         output = 1;
@@ -110,28 +135,32 @@ int ArmerTeleop::ConfigureTwist
     else
     {
         // Apply expected behaviour (left or right) directional movement
-        if(trigger_left > 0)
+        if(_trigger_left > 0)
         {
-            twist.linear.x = _joy_params.linear_scale * trigger_left;
+            twist.linear.x = _joy_params.linear_scale * _trigger_left;
         }
-        else if(trigger_right > 0)
+        else if(_trigger_right > 0)
         {
-            twist.linear.x = (-1.0) * _joy_params.linear_scale * trigger_right;
+            output = 4;
+            twist.linear.x = (-1.0) * _joy_params.linear_scale * _trigger_right;
         }
         else
         {
+            output = 3;
             twist.linear.x = 0.0;
         }
     }
     
-    // Prepare angular twists
-    twist.angular.z = _joy_params.angular_scale * axes[_joy_params.angular_roll];
-    twist.angular.y = _joy_params.angular_scale * axes[_joy_params.angular_pitch];
+    // Prepare angular twists - z (pitch) and y (roll)
+    twist.angular.z = _joy_params.angular_scale * axes[_joy_params.angular_pitch]; //Around z-axis in Base Frame
+    twist.angular.y = _joy_params.angular_scale * axes[_joy_params.angular_roll];  //Around y-axis in Base Frame
 
     //Handle angular x (yaw) axis using analogue buttons
-    int left_stick_pressed = buttons[_joy_params.angular_yaw_pos];
-    int right_stick_pressed = buttons[_joy_params.angular_yaw_neg];
-    if(left_stick_pressed && right_stick_pressed)
+    _left_stick_pressed = buttons[_joy_params.angular_yaw_pos];
+    _right_stick_pressed = buttons[_joy_params.angular_yaw_neg];
+
+    //Resolve for both sticks pressed twice
+    if(_left_stick_pressed && _right_stick_pressed)
     {
         //Do nothing, as both sticks are pressed
         output = 2;
@@ -139,11 +168,11 @@ int ArmerTeleop::ConfigureTwist
     else
     {
         // Apply expected behaviour (left or right) directional movement
-        if(left_stick_pressed)
+        if(_left_stick_pressed)
         {
             twist.angular.x = _joy_params.angular_scale;
         }
-        else if(right_stick_pressed)
+        else if(_right_stick_pressed)
         {
             twist.angular.x = (-1.0) * _joy_params.angular_scale;
         }
@@ -213,7 +242,7 @@ int ArmerTeleop::UpdateFrame( std::vector<int> buttons )
  * 
  * @param joy (message type)
  */
-void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
+void ArmerTeleop::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     // Declare twist message for configuration
     geometry_msgs::Twist twist;
@@ -275,17 +304,28 @@ void ArmerTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 
 }
 
-// /**
-//  * @brief Main function of node
-//  * 
-//  * @param argc 
-//  * @param argv 
-//  * @return int 
-//  */
-// int main(int argc, char** argv)
-// {
-//     ros::init(argc, argv, "armer_teleop");
-//     ArmerTeleop armer_teleop;
+/**
+ * @brief This method (given a std::vector<T> of either int or float type) 
+ *          clamps the values to minimum of 0 or maximum of 1
+ *  
+ *          Reference: https://stackoverflow.com/questions/45541921/c-clamp-function-for-a-stdvector
+ * 
+ * @tparam T Template of either int, or float
+ * @param input_image 
+ * @param min_value 
+ * @param max_value 
+ */
+template <typename T>
+void ArmerTeleop::ClampInput(
+    std::vector<T>& input_image, 
+    T min_value, 
+    T max_value
+)
+{
+    auto clamp = [min_value, max_value](T x) {
+        return std::min(std::max(x, min_value), max_value);
+    };
 
-//     ros::spin();
-// }
+    std::transform(input_image.begin(), input_image.end(),
+                   input_image.begin(), clamp);
+}

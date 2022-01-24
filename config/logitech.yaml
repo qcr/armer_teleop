@@ -46,18 +46,21 @@
 # Define the linear axis control
 axis_linear_y: 0
 axis_linear_z: 1
-axis_linear_x_positive: 5 # Positive motion as right trigger
-axis_linear_x_negative: 2 # Negative motion as left trigger
+axis_linear_x_positive: 2 # Positive motion as left trigger
+axis_linear_x_negative: 5 # Negative motion as right trigger
 scale_linear: 0.2         # Large scaling for safety
 scale_linear_turbo: 1.5
 
 # Define angular control
 axis_angular_roll: 3 #Roll
 axis_angular_pitch: 4 #Pitch
-axis_angular_yaw_positive: 10 #Yaw positive - as right stick click (constant vel)
-axis_angular_yaw_negative: 9 #Yaw negative - as left stick click (constant vel)
+axis_angular_yaw_positive: 9  #Yaw positive - as left stick click (constant vel)
+axis_angular_yaw_negative: 10 #Yaw negative - as right stick click (constant vel)
 scale_angular: 0.4
 
+# Additional Info
 enable_button: 4  # L1 shoulder button
 enable_home: 8    # Controller Home (middle) Button
 toggle_frame: 0   # Toggles between EE frame (specified in launch by default) or Base Frame
+max_axes_size: 8
+max_btns_size: 11
