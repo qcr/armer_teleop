@@ -4,7 +4,7 @@
  * @brief Construct a new Armer Teleop:: Armer Teleop object
  *       - NOTE: default arguments based on logitech controller configuration
  */
-ArmerTeleop::ArmerTeleop()
+ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
 {
     // Not constructed yet
     _class_construction = false;
@@ -61,6 +61,7 @@ ArmerTeleop::ArmerTeleop()
     _trigger_right = 1;         //Joy node idle value for triggers (remapped to 0 by class)
     _left_stick_pressed = 0;    //Joy node idle value for buttons
     _right_stick_pressed = 0;   //Joy node idle value for buttons
+    _homing_speed = 0.2;        //Armer home client speed default
 
     // Initialise class axes and button arrays with sizes based on controller used
     _axes.assign(_joy_params.max_axes_size, 0);
@@ -72,9 +73,6 @@ ArmerTeleop::ArmerTeleop()
     // ------- Required publishers and subscribers
     _vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("arm/cartesian/velocity", 1);
     _joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &ArmerTeleop::JoyCallback, this);
-
-    // ------- Required Services (Home)
-    _home_srv = nh_.serviceClient<std_srvs::Empty>("/arm/home");
 
     // Successfully constructed class and setup ROS specific functionality
     _class_construction = true;
@@ -288,16 +286,19 @@ void ArmerTeleop::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         _teleop_state = HOMING; 
 
         //Send robot arm to home position (defined by Armer)
-        //Only runs if the home service exists
-        std_srvs::Empty srv;
-        if(_home_srv.exists()) 
+        //Only runs if the home server exists/connected
+        if(_home_client.isServerConnected())
         {
-            _home_srv.call(srv);
+            armer_msgs::HomeActionGoal home;
+            home.goal.speed = _homing_speed;                //Default
+            _home_client.sendGoal(home.goal);
+            _home_client.waitForResult(ros::Duration(30));  //30 second timeout
         }
-        else 
+        else
         {
-            ROS_WARN_STREAM("Armer Home Service Unavailable...");
+            ROS_ERROR_STREAM("Home is NOT connected!");
         }
+
         //Set state to IDLE
         _teleop_state = IDLE; 
     }

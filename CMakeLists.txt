@@ -12,6 +12,8 @@ add_definitions(-std=c++11 -Wall -g)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   joy
+  armer_msgs
+  actionlib
 )
 
 ## System dependencies are found with CMake's conventions

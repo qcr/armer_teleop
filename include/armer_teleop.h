@@ -6,7 +6,8 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Joy.h>
-#include <std_srvs/Empty.h>
+#include <actionlib/client/simple_action_client.h>
+#include <armer_msgs/HomeAction.h>
 
 /**
  * @brief STATE enumeration
@@ -63,6 +64,12 @@ struct joy_params
 };
 
 /**
+ * @brief Action Clients defined here
+ * 
+ */
+typedef actionlib::SimpleActionClient<armer_msgs::HomeAction> Client;
+
+/**
  * @brief Definition of the ArmerTeleop class
  * 
  */
@@ -114,7 +121,7 @@ private:
     ros::NodeHandle nh_;
     ros::Publisher _vel_pub;
     ros::Subscriber _joy_sub;
-    ros::ServiceClient _home_srv;
+    Client _home_client;
 
     //Test Variables
     bool _class_construction;
@@ -132,6 +139,7 @@ private:
     BUTTON_STATES _frame_btn_states;
     double _trigger_left, _trigger_right;
     int _left_stick_pressed, _right_stick_pressed;
+    double _homing_speed;
 };
 
 #endif

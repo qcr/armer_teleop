@@ -56,6 +56,9 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>joy</exec_depend>
 
+  <depend>armer_msgs</depend>
+  <depend>actionlib</depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
