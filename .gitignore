@@ -145,3 +145,6 @@ docs/build
 
 #Examples
 examples/
+
+#Debians
+debian/*
