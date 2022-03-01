@@ -10,6 +10,19 @@ This is a teleoperation driver based on joy for the Armer driver. For the instal
 - PS4 Wireless Controller
 
 ## Installation
+
+### Ubuntu
+Before running the below command, ensure you have the [QCR Repositories](https://qcr.github.io/armer/add_qcr_repos.html) setup correctly:
+```bash
+sudo apt update && sudo apt install ros-noetic-armer-teleop
+```
+Please note the currently supported (built) ROS distros and architectures:
+- ubuntu 20.04 (noetic) amd64 
+- ubuntu 20.04 (noetic) arm64 ***[in progress]***
+- ubuntu 20.04 (noetic) arm32 ***[in progress]***
+- ubuntu 18.04 (melodic) amd64 ***[TODO]***
+
+### From Source
 Copy and paste the following code snippet into a terminal to create a new catkin workspace and install the armer_teleop to it. Note that, the armer package is not required as a dependency, as the package can be run from an external camera. If directly used with Armer, it is recommended to be placed in the same catkin_ws for ease of use.
 
 ```
