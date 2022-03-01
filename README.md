@@ -18,8 +18,8 @@ sudo apt update && sudo apt install ros-noetic-armer-teleop
 ```
 Please note the currently supported (built) ROS distros and architectures:
 - ubuntu 20.04 (noetic) amd64 
-- ubuntu 20.04 (noetic) arm64 ***[in progress]***
-- ubuntu 20.04 (noetic) arm32 ***[in progress]***
+- ubuntu 20.04 (noetic) arm64
+- ubuntu 20.04 (noetic) arm32
 - ubuntu 18.04 (melodic) amd64 ***[TODO]***
 
 ### From Source
