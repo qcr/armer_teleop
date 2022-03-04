@@ -1,6 +1,6 @@
-# This is a QCR ROS debianising pipeline for amd64, arm64 and arm32
+# This is a QCR ROS debian creation pipeline for amd64, arm64 and arm32
 # Assumes the latest ubuntu for running the job (with ROS noetic (temp))
-name: release-build-pipeline
+name: Release ROS Debian(s)
 
 # Controls when the workflow will run
 on:
@@ -15,13 +15,23 @@ jobs:
   # This workflow contains a single job called "build"
   release-build-action:
     # The type of runner that the job will run on
+    # NOTE: the runner does not matter as the container pulls the correct codename and distro
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - arch: 'amd64'
-          - arch: 'arm64'
-          - arch: 'arm32'
+          - ros-distro: melodic
+            arch: amd64
+          - ros-distro: melodic
+            arch: arm64
+          - ros-distro: melodic
+            arch: arm32
+          - ros-distro: noetic
+            arch: amd64
+          - ros-distro: noetic
+            arch: arm64
+          - ros-distro: noetic
+            arch: arm32
     name: Release-Build-Pipeline
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -30,14 +40,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: ws/src/${{ github.event.repository.name }}
+      # Required dependency for arm emulation
       - name: Setup QEMU dependency
         uses: docker/setup-qemu-action@v1
-      # Builds your packages within a different architectures (in matrix above)
+      # Builds your packages within different architectures and distros (in matrix above)
       - name: Run Release Workflow
         id: build
         uses: qcr/ros-debian-release-action@master
         with:
           architecture: ${{ matrix.arch }}
+          ros-distro: ${{ matrix.ros-distro }}
       # Upload the debian binaries to your repo with the current tag
       - name: Upload Binaries to Release
         uses: suddrey-qut/upload-release-action@master
