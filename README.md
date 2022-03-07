@@ -18,7 +18,7 @@ sudo apt update && sudo apt install ros-noetic-armer-teleop
 ```
 
 ### Ubuntu (via dpkg)
-You can also download the latest debian packages by running the following command (in a suitable directory). Note that you must specify the <ARCH> you wish to download (i.e., amd64 or arm64). Alternatively, you can manually download from the latest release in this repository.
+You can also download the latest debian packages by running the following command (in a suitable directory). Note that you must specify the ***ARCH*** you wish to download (i.e., amd64 or arm64). Alternatively, you can manually download from the latest release in this repository.
   
 ```bash
 curl -s https://api.github.com/repos/qcr/armer_teleop/releases/latest \
@@ -27,11 +27,10 @@ curl -s https://api.github.com/repos/qcr/armer_teleop/releases/latest \
 | tr -d \" \
 | wget -qi -
 ```
-To install, run the following command. Note, please replace <Downloaded Deb> with your downloaded version:
+To install, run the following command. Note, please replace ***Downloaded Deb*** with your downloaded version:
 ```bash
 sudo dpkg -i <Downloaded Deb>.deb
 ```
-  
 Please note the currently supported (built) ROS distros and architectures:
 - ubuntu 20.04 (noetic) amd64 
 - ubuntu 20.04 (noetic) arm64
