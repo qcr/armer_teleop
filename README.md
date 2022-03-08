@@ -34,8 +34,8 @@ sudo dpkg -i <Downloaded Deb>.deb
 Please note the currently supported (built) ROS distros and architectures:
 - ubuntu 20.04 (noetic) amd64 
 - ubuntu 20.04 (noetic) arm64
-- ubuntu 18.04 (melodic) amd64 ***[In Progress]***
-- ubuntu 18.04 (melodic) arm64 ***[In Progress]***
+- ubuntu 18.04 (melodic) amd64
+- ubuntu 18.04 (melodic) arm64
 
 ### From Source
 Copy and paste the following code snippet into a terminal to create a new catkin workspace and install the armer_teleop to it. Note that, the armer package is not required as a dependency, as the package can be run from an external camera. If directly used with Armer, it is recommended to be placed in the same catkin_ws for ease of use.
