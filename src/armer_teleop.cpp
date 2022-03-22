@@ -46,8 +46,9 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
     nh_.param("max_btns_size", _joy_params.max_btns_size, _joy_params.max_btns_size);
 
     // ------- Get node specific params (loaded by launch file)
-    nh_.getParam("/armer_teleop/frame_id", _frame_id);
-    nh_.getParam("/armer_teleop/base_frame", _base_frame);
+    nh_.getParam("/armer_teleop_node/frame_id", _frame_id);
+    nh_.getParam("/armer_teleop_node/base_frame", _base_frame);
+    ROS_INFO_STREAM("Loaded Base Frame: [" << _base_frame << "] | Loaded EE Frame: [" << _frame_id << "]");
 
     // Defined internal states for teleop: [0: idle, 1: enabled; 2: homed; 3: transition]
     _teleop_state = IDLE;
