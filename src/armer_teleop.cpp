@@ -28,6 +28,10 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
     _frame_id = "tool0"; //Default to end-effector name tool0
     _base_frame = "base_link"; //Default base frame name
 
+    // Current Version (FROM PACKAGE XML)
+    // See CMakeLists.txt for definition
+    ROS_INFO_STREAM("Driver Version: " << armer_teleop_VERSION);
+
     // ------- Update (if needed) class variables from ROS param server (loaded by launch file) ---------
     nh_.param("axis_linear_z", _joy_params.linear_z, _joy_params.linear_z);
     nh_.param("axis_linear_y", _joy_params.linear_y, _joy_params.linear_y);
@@ -50,7 +54,7 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
     nh_.getParam("/armer_teleop_node/base_frame", _base_frame);
     ROS_INFO_STREAM("Loaded Base Frame: [" << _base_frame << "] | Loaded EE Frame: [" << _frame_id << "]");
 
-    // Defined internal states for teleop: [0: idle, 1: enabled; 2: homed; 3: transition]
+    // Defined internal states for teleop: [0: idle, 1: enabled_vel_cntl; 2: enabled_home; 3: transition (NOT IMPLEMENTED)]
     _teleop_state = IDLE;
     // Defined state for toggling (using the A button) between base and ee frame - defaults to EE
     _frame_control = EE_FRAME;
@@ -243,22 +247,66 @@ int ArmerTeleop::UpdateFrame( std::vector<int> buttons )
  */
 void ArmerTeleop::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
+    // Update the axes and button vectors from the joy message
+    _axes = joy->axes;
+    _buttons = joy->buttons;
+}
+
+/**
+ * @brief Evaluates if a movement has occurred (true if yes)
+ * 
+ * @param twist (geometry_msgs) giving a float velocity in linear and angular direction
+ * @return true 
+ * @return false 
+ */
+bool ArmerTeleop::JoyMovementAck( geometry_msgs::Twist twist )
+{
+    bool output = true;
+
+    // Check given twist for any movement
+    float lin_x = twist.linear.x;
+    float lin_y = twist.linear.y;
+    float lin_z = twist.linear.z;
+    float ang_x = twist.angular.x;
+    float ang_y = twist.angular.y;
+    float ang_z = twist.angular.z;
+
+    if (lin_x == 0
+        && lin_y == 0
+        && lin_z == 0
+        && ang_x == 0
+        && ang_y == 0
+        && ang_z == 0)
+    {
+        // No Movement from Controller
+        output = false;
+    }
+
+    return output;
+}
+
+/**
+ * @brief Main method of Teleoperation
+ * 
+ */
+void ArmerTeleop::Run( bool test )
+{
     // Declare twist message for configuration
     geometry_msgs::Twist twist;
 
-    // Get the axes and button vectors from the joy message
-    std::vector<float> axes = joy->axes;
-    std::vector<int> buttons = joy->buttons;
-
-    // twist type updated from axes and button vectors
-    ConfigureTwist(twist, axes, buttons);
+    // twist type updated from current axes and button vectors
+    ConfigureTwist(twist, _axes, _buttons);
     
     // Update frame from configured button press
-    UpdateFrame(buttons);
+    UpdateFrame(_buttons);
     
     // Define the twist stamped message to publish modifed twist from above
     geometry_msgs::TwistStamped twist_s;
     twist_s.twist = twist;
+
+    // Allocate button states
+    _deadman_state = _buttons[_joy_params.deadman_btn];
+    _home_btn_state = _buttons[_joy_params.home_btn];
 
     // Update the frame based on what was configured in the UpdateFrame method
     if(_frame_control == EE_FRAME)
@@ -270,40 +318,69 @@ void ArmerTeleop::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         twist_s.header.frame_id = _base_frame;
     }
 
-    // Publish twist stamped message ONLY if deadman is pressed
-    // and we are NOT homing
-    if (buttons[_joy_params.deadman_btn] && _teleop_state != HOMING)
+    // Run Movement ONLY if DEADMAN is PRESSED
+    if (_deadman_state)
     {
-        //Trigger publish only if DEADMAN is pressed
-        _vel_pub.publish(twist_s);
-
-        //Update teleop state
-        _teleop_state = ENABLED;
-    }
-    // Execute the Armer Driver Homing functionality via ROS action server
-    else if ( buttons[_joy_params.home_btn] )
-    {
-        //Set state to HOMING
-        _teleop_state = HOMING; 
-
-        //Send robot arm to home position (defined by Armer)
-        //Only runs if the home server exists/connected
-        if(_home_client.isServerConnected())
+        // Run Homing Action (if no other motion present)
+        if (_home_btn_state && !JoyMovementAck(twist))
         {
-            armer_msgs::HomeActionGoal home;
-            home.goal.speed = _homing_speed;                //Default
-            _home_client.sendGoal(home.goal);
-            _home_client.waitForResult(ros::Duration(30));  //30 second timeout
+            // Set state to HOMING
+            _teleop_state = ENABLED_HOMING; 
+
+            // Send robot arm to home position (defined by Armer)
+            // Only runs if the home server exists/connected
+            // NOTE: only run if NOT in test (g_test) mode
+            if(!test)
+            {
+                if(_home_client.isServerConnected())
+                {
+                    armer_msgs::HomeActionGoal home;
+                    home.goal.speed = _homing_speed;                
+                    _home_client.sendGoal(home.goal);
+                }
+                else
+                {
+                    ROS_ERROR_STREAM("Home is NOT connected!");
+                }
+            }
+        }
+        // Run Velocity Control (if motion IS present AND we are not Homing)
+        else if (JoyMovementAck(twist) && _teleop_state != ENABLED_HOMING)
+        {
+            //Update teleop state
+            _teleop_state = ENABLED_VEL_CNTRL;
+
+            //Trigger publish only if DEADMAN is pressed
+            // NOTE: only run if NOT in test (g_test) mode
+            if(!test)
+            {
+                _vel_pub.publish(twist_s);
+            }
         }
         else
         {
-            ROS_ERROR_STREAM("Home is NOT connected!");
+            //Waiting state to handle teleop state param
+            //On Successful Home, Sets State Back to IDLE to Keep Smooth Motion (NO RESET OF DEADMAN)
+            if(_home_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && !test)
+            {
+                _teleop_state = IDLE;
+            }
+        }
+    }
+    else
+    {
+        // Terminate any Actions if Released
+        if(_home_client.getState() == actionlib::SimpleClientGoalState::ACTIVE && !test)
+        {
+            ROS_INFO_STREAM("Terminating Action [HOME]");
+            _home_client.cancelAllGoals();
         }
 
-        //Set state to IDLE
+        // ADD Other Actions if Required for Termination HERE
+
+        // Currently in IDLE
         _teleop_state = IDLE; 
     }
-
 }
 
 /**

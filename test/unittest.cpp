@@ -101,6 +101,141 @@ TEST( ArmerTeleopFunctionality, InputClampingTest )
 }
 
 /**
+ * @brief Tests the JoyMovementAck function (verifies movement from joy controller)
+ * 
+ */
+TEST( ArmerTeleopFunctionality, JoyMovementAckTest )
+{
+    ros::NodeHandle nh("~");
+    ArmerTeleop teleop_class;
+    geometry_msgs::Twist test_twist;
+    bool result = false;
+
+    // Test No Movement Acknowledge (All Linear and Angular Motion MUST be 0)
+    test_twist.linear.x = 0;
+    test_twist.linear.y = 0;
+    test_twist.linear.z = 0;
+    test_twist.angular.x = 0;
+    test_twist.angular.y = 0;
+    test_twist.angular.z = 0;
+
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    ASSERT_EQ(result, false);
+
+    // --------- SINGLE LINEAR TESTS 
+    // Test Movement Acknowledge (Linear x only in POS and NEG directions)
+    test_twist.linear.x = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.x = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Linear y only in POS and NEG directions)
+    test_twist.linear.y = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.y = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Linear z only in POS and NEG directions)
+    test_twist.linear.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // --------- SINGLE ANGULAR TESTS 
+    // Test Movement Acknowledge (Angular x only in POS and NEG directions)
+    test_twist.angular.x = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.x = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Angular y only in POS and NEG directions)
+    test_twist.angular.y = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.y = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Angular z only in POS and NEG directions)
+    test_twist.angular.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // --------- COMBINATION LINEAR TESTS 
+    // Test Movement Acknowledge (Linear x and y in POS and NEG directions)
+    test_twist.linear.x = 0.1;
+    test_twist.linear.y = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.x = -0.1;
+    test_twist.linear.y = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Linear x and z only in POS and NEG directions)
+    test_twist.linear.x = 0.1;
+    test_twist.linear.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.x = -0.1;
+    test_twist.linear.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Linear y and z only in POS and NEG directions)
+    test_twist.linear.y = 0.1;
+    test_twist.linear.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.linear.y = -0.1;
+    test_twist.linear.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // --------- COMBINATION ANGULAR TESTS 
+    // Test Movement Acknowledge (Angular x and y in POS and NEG directions)
+    test_twist.angular.x = 0.1;
+    test_twist.angular.y = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.x = -0.1;
+    test_twist.angular.y = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Angular x and z only in POS and NEG directions)
+    test_twist.angular.x = 0.1;
+    test_twist.angular.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.x = -0.1;
+    test_twist.angular.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+
+    // Test Movement Acknowledge (Angular y and z only in POS and NEG directions)
+    test_twist.angular.y = 0.1;
+    test_twist.angular.z = 0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+    test_twist.angular.y = -0.1;
+    test_twist.angular.z = -0.1;
+    result = teleop_class.TestJoyMovementAck(test_twist); 
+    EXPECT_EQ(result, true);
+}
+
+/**
  * @brief Tests the expected linear twist output from a given input (simulated Logitech controller)
  * 
  */
@@ -462,6 +597,111 @@ TEST( ArmerTeleopFunctionality, PS4ConfigAngularTwistTest )
     buttons[test_params.angular_yaw_neg] = 1.0;               // this is fully pressed (remapped to 1.0 in driver)
     teleop_class.TestConfigureTwist(test_twist, axes, buttons);
     EXPECT_NEAR(test_twist.angular.x, -(1.0) * test_params.angular_scale, 0.01);   //X axis velocity should be max negative scale
+}
+
+/**
+ * @brief Tests the Main Run method of the class (Mainly The DEADMAN Functionality)
+ * 
+ */
+TEST( ArmerTeleopFunctionality, MainRunMethodTest )
+{
+    ros::NodeHandle nh("~");
+    ArmerTeleop teleop_class;
+    geometry_msgs::Twist test_twist;
+    TELEOP_STATES teleop_state;
+    bool test = true;
+
+    // Set frame to BASE_LINK for comparing (Z: up/down | Y: left/right | X: forward/back) 
+    // ---> note that all axis configurations are pos/neg expected
+    // Also get the current params for testing (default)
+    FRAME_CONTROL test_frame = BASE_FRAME;
+    teleop_class.SetFrame(test_frame);
+    joy_params test_params = teleop_class.GetJoyParams();
+
+    // axes array is 8 elements long (same for logitech and ps4)
+    std::vector<float> axes(test_params.max_axes_size, 0);
+    // button array is 11 elements long (logitech) and 13 elements (ps4) - Defaulting to Logitech
+    std::vector<int> buttons(test_params.max_btns_size, 0);
+
+    //----- TEST NO DEADMAN OUTPUT ---------
+    // Set Deadman to False
+    buttons[test_params.deadman_btn] = 0;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, IDLE);  //Terminate on Failure (Critical)
+
+    //----- TEST NO DEADMAN and VEL CONTROL (Linear Any Type) --------
+    // Set Deadman to False
+    buttons[test_params.deadman_btn] = 0;
+    // Set Linear Velocity to a non-zero amount
+    axes[test_params.linear_z] = 0.1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.SetAxesVect(axes);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, IDLE);  //Terminate on Failure (Critical)
+    axes[test_params.linear_z] = 0; //Clear for next test
+    teleop_class.SetAxesVect(axes);
+
+    //----- TEST DEADMAN and VEL CONTROL (Linear Any Type) --------
+    // Set Deadman to True
+    buttons[test_params.deadman_btn] = 1;
+    // Set Linear Velocity to a non-zero amount
+    axes[test_params.linear_z] = 0.1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.SetAxesVect(axes);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, ENABLED_VEL_CNTRL);  //Terminate on Failure (Critical)
+    axes[test_params.linear_z] = 0; //Clear for next test
+    teleop_class.SetAxesVect(axes);
+
+    //----- TEST NO DEADMAN and VEL CONTROL (Angular Any Type) --------
+    // Set Deadman to False
+    buttons[test_params.deadman_btn] = 0;
+    // Set Linear Velocity to a non-zero amount
+    axes[test_params.angular_pitch] = 0.1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.SetAxesVect(axes);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, IDLE);  //Terminate on Failure (Critical)
+    axes[test_params.angular_pitch] = 0; //Clear for next test
+    teleop_class.SetAxesVect(axes);
+
+    //----- TEST DEADMAN and VEL CONTROL (Angular Any Type) --------
+    // Set Deadman to True
+    buttons[test_params.deadman_btn] = 1;
+    // Set Linear Velocity to a non-zero amount
+    axes[test_params.angular_pitch] = 0.1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.SetAxesVect(axes);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, ENABLED_VEL_CNTRL);  //Terminate on Failure (Critical)
+    axes[test_params.angular_pitch] = 0; //Clear for next test
+    teleop_class.SetAxesVect(axes);
+
+    //----- TEST NO DEADMAN and HOME ACTION --------
+    // Set Deadman to False
+    buttons[test_params.deadman_btn] = 0;
+    // Set Home Action to True
+    buttons[test_params.home_btn] = 1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, IDLE);  //Terminate on Failure (Critical)
+
+    //----- TEST DEADMAN and HOME ACTION --------
+    // Set Deadman to True
+    buttons[test_params.deadman_btn] = 1;
+    // Set Home Action to True
+    buttons[test_params.home_btn] = 1;
+    teleop_class.SetBtnsVect(buttons);
+    teleop_class.Run(test);
+    teleop_state = teleop_class.GetCurrentState();
+    ASSERT_EQ(teleop_state, ENABLED_HOMING);  //Terminate on Failure (Critical)
 }
 
 /**

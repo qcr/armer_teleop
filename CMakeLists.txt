@@ -113,6 +113,9 @@ catkin_package(
   DEPENDS system_lib
 )
 
+## Version for Reference in Package
+add_definitions("-D${PROJECT_NAME}_VERSION=\"${${PROJECT_NAME}_VERSION}\"")
+
 ###########
 ## Build ##
 ###########

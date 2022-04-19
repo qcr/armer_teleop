@@ -51,6 +51,8 @@ echo "Installation Complete!"
 ```
 
 ## Usage
+***WARNING: Please Ensure A Safe and Clear Workspace If Using This Package With A Real Robot***
+
 The package can be run independently via its launch file:
 
 ***Note: that the arguments specified below are the defaults, so this launch file can be run without those arguments. If they are required to be changed, then each argument should be passed in as shown below.***

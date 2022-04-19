@@ -7,7 +7,14 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Joy.h>
 #include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/terminal_state.h>
 #include <armer_msgs/HomeAction.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 
 /**
  * @brief STATE enumeration
@@ -16,8 +23,8 @@
 typedef enum 
 {
     IDLE = 0,
-    ENABLED = 1,
-    HOMING = 2
+    ENABLED_VEL_CNTRL = 1,
+    ENABLED_HOMING = 2
 } TELEOP_STATES;
 
 /**
@@ -80,9 +87,13 @@ public:
     ArmerTeleop();
     ~ArmerTeleop();
 
+    // Main Run Method
+    void Run( bool test = false );
+
     // --------- Get and Set Methods
     FRAME_CONTROL GetCurrentFrame( void ) { return _frame_control; }
     BUTTON_STATES GetFrameBtnState( void ) { return _frame_btn_states; }
+    TELEOP_STATES GetCurrentState( void ) { return _teleop_state; }
     joy_params GetJoyParams( void ) { return _joy_params; }
     std::vector<float> GetAxesVect ( void ) { return _axes; }
     std::vector<int> GetBtnsVect ( void ) { return _buttons; }
@@ -90,10 +101,13 @@ public:
     double GetRightTriggerVal ( void ) { return _trigger_right; }
     void SetJoyParams( joy_params params ) { _joy_params = params; }
     void SetFrame( FRAME_CONTROL frame ) { _frame_control = frame; }
+    void SetBtnsVect (std::vector<int> buttons ) { _buttons = buttons; }
+    void SetAxesVect (std::vector<float> axes ) { _axes = axes; }
 
     // gTest Friendly Methods
     bool ClassConstructionSuccess( void ) { return _class_construction; }
     int TestUpdateFrame( std::vector<int> buttons ) { return UpdateFrame(buttons); }
+    bool TestJoyMovementAck( geometry_msgs::Twist twist ) { return JoyMovementAck(twist); }
     int TestConfigureTwist( 
         geometry_msgs::Twist &twist,
         std::vector<float> axes,
@@ -104,6 +118,7 @@ private:
     // Private Functions
     void JoyCallback(const sensor_msgs::Joy::ConstPtr& joy);
     int UpdateFrame( std::vector<int> buttons );
+    bool JoyMovementAck( geometry_msgs::Twist twist );
     int ConfigureTwist( 
         geometry_msgs::Twist &twist,
         std::vector<float> axes,
@@ -127,6 +142,10 @@ private:
     bool _class_construction;
     std::vector<float> _axes;
     std::vector<int> _buttons;
+
+    // Accessable States/Variables
+    int _deadman_state;
+    int _home_btn_state;
 
     //Other Variables
     joy_params _joy_params;
