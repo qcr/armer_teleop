@@ -3,11 +3,16 @@
     <arg name="frame_id_EE"         default="tool0"     doc="This is the frame id given to the particular EE frame of a given robot" />
     <arg name="frame_id_base"       default="base_link" doc="This is the base frame of the robot - specify if different to base_link" />
     <arg name="trig_val"            default="true"      doc="If this parameter is not set (i.e., false), the triggers report a value of 0.0 until they are touched" />
-    <arg name="controller_config"   default="logitech"  doc="The controller being used -> [logitech, ps4]"/>
+    <arg name="controller_config"   default="logitech"    doc="The controller being used -> [logitech, ps4]"/>
     
     <!-- Load the logitech yaml file if configured (default) -->
     <group if="$(eval arg('controller_config') == 'logitech')">
         <rosparam file="$(find armer_teleop)/config/logitech.yaml"/>
+    </group>
+
+    <!-- Load the logitech yaml file if configured (default) -->
+    <group if="$(eval arg('controller_config') == 'custom')">
+        <rosparam file="$(find armer_teleop)/config/custom.yaml"/>
     </group>
 
     <!-- Load the ps4 yaml file if configured -->

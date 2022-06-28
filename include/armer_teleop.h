@@ -6,9 +6,11 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Joy.h>
+#include <armer_teleop/FloatArr.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <armer_msgs/HomeAction.h>
+#include <armer_msgs/JointVelocity.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -89,6 +91,7 @@ public:
 
     // Main Run Method
     void Run( bool test = false );
+    void AltRun( bool test = false );
 
     // --------- Get and Set Methods
     FRAME_CONTROL GetCurrentFrame( void ) { return _frame_control; }
@@ -117,6 +120,7 @@ public:
 private:
     // Private Functions
     void JoyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+    void CustomCallback(const armer_teleop::FloatArr::ConstPtr& arr);
     int UpdateFrame( std::vector<int> buttons );
     bool JoyMovementAck( geometry_msgs::Twist twist );
     int ConfigureTwist( 
@@ -135,7 +139,9 @@ private:
     // ROS Specific Variables 
     ros::NodeHandle nh_;
     ros::Publisher _vel_pub;
+    ros::Publisher _jv_pub;
     ros::Subscriber _joy_sub;
+    ros::Subscriber _arr_sub;
     Client _home_client;
 
     //Test Variables
@@ -159,6 +165,7 @@ private:
     double _trigger_left, _trigger_right;
     int _left_stick_pressed, _right_stick_pressed;
     double _homing_speed;
+    bool _use_joy;
 };
 
 #endif

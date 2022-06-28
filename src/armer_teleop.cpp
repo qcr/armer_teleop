@@ -25,6 +25,7 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
     _joy_params.toggle_frame_btn = 0;
     _joy_params.max_axes_size = 8;
     _joy_params.max_btns_size = 11;
+    _use_joy = true;
     _frame_id = "tool0"; //Default to end-effector name tool0
     _base_frame = "base_link"; //Default base frame name
 
@@ -52,6 +53,7 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
     // ------- Get node specific params (loaded by launch file)
     nh_.getParam("/armer_teleop_node/frame_id", _frame_id);
     nh_.getParam("/armer_teleop_node/base_frame", _base_frame);
+    ROS_INFO_STREAM("array size: [" << _joy_params.max_axes_size << "]");
     ROS_INFO_STREAM("Loaded Base Frame: [" << _base_frame << "] | Loaded EE Frame: [" << _frame_id << "]");
 
     // Defined internal states for teleop: [0: idle, 1: enabled_vel_cntl; 2: enabled_home; 3: transition (NOT IMPLEMENTED)]
@@ -77,7 +79,9 @@ ArmerTeleop::ArmerTeleop(): _home_client("arm/home", true)
 
     // ------- Required publishers and subscribers
     _vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("arm/cartesian/velocity", 1);
+    _jv_pub = nh_.advertise<armer_msgs::JointVelocity>("arm/joint/velocity", 1);
     _joy_sub = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &ArmerTeleop::JoyCallback, this);
+    _arr_sub = nh_.subscribe<armer_teleop::FloatArr>("server/array", 10, &ArmerTeleop::CustomCallback, this);
 
     // Successfully constructed class and setup ROS specific functionality
     _class_construction = true;
@@ -118,7 +122,7 @@ int ArmerTeleop::ConfigureTwist
     // Update class axes and buttons - Used for Testing
     _axes = axes;
     _buttons = buttons;
-    
+
     // Prepare linear twists (z and y)
     twist.linear.z = _joy_params.linear_scale * axes[_joy_params.linear_z]; //UP/DOWN in Base Frame
     twist.linear.y = _joy_params.linear_scale * axes[_joy_params.linear_y]; //LEFT/RIGHT in Base Frame
@@ -253,6 +257,50 @@ void ArmerTeleop::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 }
 
 /**
+ * @brief callback function within the ArmerTeleop class
+ * 
+ * @param FloatArr (message type)
+ */
+void ArmerTeleop::CustomCallback(const armer_teleop::FloatArr::ConstPtr& arr)
+{
+    // Got new values from server
+    _axes[0] = arr->arr[0]; //Rotation at base
+    _axes[1] = arr->arr[1]; //Forward/Backward EE
+    _axes[2] = arr->arr[2]; //Up/Down EE
+
+    // if (_axes[0] != 0)
+    // {
+    //     ROS_INFO_STREAM("Rotation in Base!!!!");
+
+    //     armer_msgs::JointVelocity vel;
+    //     std::vector<double> jv_arr;
+    //     jv_arr.assign(6, 0);
+    //     jv_arr[0] = _axes[0];
+    //     vel.joints = jv_arr;
+
+    //     _jv_pub.publish(vel);
+
+    // }
+    // else
+    // {
+    // Declare twist message for configuration
+    geometry_msgs::Twist twist;
+    twist.linear.z = -_joy_params.linear_scale * _axes[1];
+    twist.linear.y = _joy_params.linear_scale * _axes[2];
+
+    // Define the twist stamped message to publish modifed twist from above
+    geometry_msgs::TwistStamped twist_s;
+    twist_s.twist = twist;
+    twist_s.header.frame_id = _frame_id; //Set to EE frame
+
+    _vel_pub.publish(twist_s);
+    // _jv_pub.publish(vel);
+    // }
+
+    ROS_INFO_STREAM("Received: [" << _axes[0] << ", " << _axes[1] << ", " << _axes[2] << "]");
+}
+
+/**
  * @brief Evaluates if a movement has occurred (true if yes)
  * 
  * @param twist (geometry_msgs) giving a float velocity in linear and angular direction
@@ -283,6 +331,18 @@ bool ArmerTeleop::JoyMovementAck( geometry_msgs::Twist twist )
     }
 
     return output;
+}
+
+/**
+ * @brief Main method of Teleoperation
+ * 
+ */
+void ArmerTeleop::AltRun( bool test )
+{
+    // Declare twist message for configuration
+    // geometry_msgs::Twist twist;
+
+    // ROS_INFO_STREAM("In Alt Run: [" << _axes[0] << ", " << _axes[1] << ", " << _axes[2] << "]");
 }
 
 /**
