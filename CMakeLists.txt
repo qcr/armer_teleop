@@ -130,6 +130,7 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/armer_teleop.cpp
+  src/server.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

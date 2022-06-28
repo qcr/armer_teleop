@@ -64,3 +64,4 @@ enable_home: 8    # Controller Home (middle) Button
 toggle_frame: 0   # Toggles between EE frame (specified in launch by default) or Base Frame
 max_axes_size: 8
 max_btns_size: 11
+use_joy: true      # Uses the Joy node callback if true, otherwise ignores

@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include "armer_teleop.h"
+#include "server.h"
 
 /**
  * @brief Main function of node
@@ -12,6 +13,10 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "armer_teleop");
     ArmerTeleop armer_teleop;
+
+    // Create a Server Object if Needed
+    Server server;
+    server.Run();
 
     // Set Rate of Functionality
     ros::Rate rate(100);
